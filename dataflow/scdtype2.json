@@ -1,0 +1,147 @@
+{
+	"name": "scdtype2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "sourcescdt1",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				},
+				{
+					"dataset": {
+						"referenceName": "target",
+						"type": "DatasetReference"
+					},
+					"name": "source2"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "target",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"dataset": {
+						"referenceName": "target",
+						"type": "DatasetReference"
+					},
+					"name": "sink2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "exists1"
+				},
+				{
+					"name": "derivedColumn3"
+				},
+				{
+					"name": "exists2"
+				},
+				{
+					"name": "exists3"
+				},
+				{
+					"name": "derivedColumn4"
+				},
+				{
+					"name": "alterRow1"
+				},
+				{
+					"name": "select1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          AGENT_CODE as string,",
+				"          AGENT_NAME as string,",
+				"          WORKING_AREA as string,",
+				"          Last_Updated as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> source1",
+				"source(output(",
+				"          AGENT_CODE as string,",
+				"          AGENT_NAME as string,",
+				"          WORKING_AREA as string,",
+				"          Last_Updated as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> source2",
+				"source1 derive(hashvalue = md5(AGENT_CODE,AGENT_NAME,WORKING_AREA,Last_Updated)) ~> derivedColumn1",
+				"source2 derive(hashvalue = md5(AGENT_CODE,AGENT_NAME,WORKING_AREA,Last_Updated)) ~> derivedColumn2",
+				"derivedColumn1, derivedColumn2 exists(source1@AGENT_CODE == source2@AGENT_CODE,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> exists1",
+				"exists1 derive(flag = 1) ~> derivedColumn3",
+				"derivedColumn2, derivedColumn1 exists(source2@AGENT_CODE == source1@AGENT_CODE,",
+				"     negate:false,",
+				"     broadcast: 'auto')~> exists2",
+				"derivedColumn2, derivedColumn1 exists(derivedColumn2@hashvalue == derivedColumn1@hashvalue,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> exists3",
+				"exists2 derive(hashvalue = 0) ~> derivedColumn4",
+				"derivedColumn4 alterRow(updateIf(true())) ~> alterRow1",
+				"alterRow1 select(mapColumn(",
+				"          AGENT_CODE,",
+				"          AGENT_NAME,",
+				"          WORKING_AREA,",
+				"          Last_Updated",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          AGENT_CODE as string,",
+				"          AGENT_NAME as string,",
+				"          WORKING_AREA as string,",
+				"          Last_Updated as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     partitionBy('hash', 1)) ~> sink1",
+				"derivedColumn3 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          AGENT_CODE as string,",
+				"          AGENT_NAME as string,",
+				"          WORKING_AREA as string,",
+				"          Last_Updated as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     partitionBy('hash', 1)) ~> sink2"
+			]
+		}
+	}
+}

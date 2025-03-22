@@ -1,0 +1,36 @@
+{
+	"name": "sourcescdt1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "AGENT_CODE",
+				"type": "char"
+			},
+			{
+				"name": "AGENT_NAME",
+				"type": "varchar"
+			},
+			{
+				"name": "WORKING_AREA",
+				"type": "varchar"
+			},
+			{
+				"name": "Last_Updated",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "SCDt1_source"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
